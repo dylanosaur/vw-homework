@@ -1,0 +1,20 @@
+version: '3'
+services:
+  db:
+    image: postgres:latest
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=vw_adams
+      - POSTGRES_PASSWORD=wyvernfiles
+      - POSTGRES_DB=vw_db
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+  web:
+    image: flaskapp:test
+    ports:
+      - '5000:5000'
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://vw_adams:wyvernfiles@db:5432/vw_db
