@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>All Plots</title>
+</head>
+<body>
+    <h1>All Plots</h1>
+    <ul>
+    {% for container in plot_containers %}
+        <li><a href="{{ container.link }}">{{ container.name }}</a></li>
+    {% endfor %}
+    </ul>
+</body>
+</html>

@@ -1,0 +1,45 @@
+Initial plans:
+
+1. look at data and determine general structure, how many tables needed, how many columns
+2. bundle up postgres + UI app into a docker-compose file
+3. use local postgres db with startup script and load data into postgres using sqlalchemy
+4. add flask web-app for UI and debugging interface
+
+initially I just had an "events" table but soon realized it made sense to split into IMU and POSE events
+I wrote a small script "inspect_data.py" so i could quickly iterate reading the data from the json file
+There are certainly tools out there to load from json, but I would rather do it manually to keep it simple
+
+I used chatgpt to help me generate the python models and the startup script, then added the "as_dict" method 
+    to make printing the data and inspecting it web friendly. It is always good to directly inspect the results
+    of any data loading for errors and nulls. While a great starting point, chatgpt added extraneous columns from nowhere
+    and did not set my primary key to the SERIAL type. Easy fixes, but generally all generated code must be reviewed
+    as it typically contains small errors like this. Also I prefer the "float" types as they are more specific than the
+    "numeric" types in postgres, and are rendered as numbers instead of strings by the browser.
+
+I like to keep all the dependencies for applications in a requirements.txt file and I think this is becoming the standard. 
+    This is what I see the most often when helping others develop web apps in my discord communities and in online coding
+    challenges. We could pin the versions but its not needed for this demo.
+
+I added a script "run.sh" that does the build and deploy sequence so I could more easily iterate the startup and
+    initial web-app load. One command is easier than 4, reduces dumb CLI mistyping mistakes and generally makes me happier
+    while developing. 
+
+Some troubles while loading and sampling data related to the .'s in the column names and the uppercase characters. initially
+    I am just loading in the first 100 timestamped events to keep things fast for iteration.
+
+Originally I had planned to use matplotlib for visualization since this is what I am most familiar with from years in lab research.
+    Sadly there is not an easy to embed the full matplotlib UI (the click/zoom/etc features) into a webpage. I tried a tornado app,
+    I tried connecting my display from my local linux into a dockerized mpl app, but both did not give me the buttons I am familiar
+    with from matplotlib. I have also used plotly before, and that seems to work out of the box! 
+
+I have added a few routes and looked at some data. I switched to preloading the first 1000 events, and then we can load all 
+    the data if needed with /load_samples?limiter=0 but even that route is fast so maybe I'll just preload everything. Looking at
+    the gyro data there seems to be a turn in the first half of the data set of of the IMU events. One route for displaying the data,
+    another route to generate the plots for a given field plotted against the epoch time (timestamp). 
+
+Cleaning up and improvements:
+    Delete all matplotlib trials
+    add a "delete all data" to start of the loading events to prevent duplicates
+    have a "plot all at once page" stacked vertically aligned by time
+    duplicate work for the POSE sensor data
+    
