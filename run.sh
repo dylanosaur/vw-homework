@@ -1,6 +1,6 @@
 docker-compose rm -f
 
-cd /home/dylan/volkswagon/flask-app
+cd ./flask-app
 
 # Build the Docker image
 docker build . -t flaskapp:test 

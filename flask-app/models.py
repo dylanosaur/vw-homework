@@ -56,12 +56,15 @@ class PoseEvents(db.Model):
     def as_dict(self):
         return {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
+    def filtered_dict(self, y):
+        return {column.name: getattr(self, column.name) for column in self.__table__.columns if column.name in ['epoch_time', y]}
+
 
 from sqlalchemy.orm import sessionmaker
 import time
 def external_session():
     # Create a database engine
-    time.sleep(5)
+    time.sleep(2)
     engine = create_engine('postgresql://vw_adams:wyvernfiles@db:5432/vw_db')
 
     # Create a session factory
@@ -71,12 +74,12 @@ def external_session():
     session = Session()
     return session
 
-def load_samples(limiter=100, session = db.session):
+def load_samples(limiter=0, session = db.session):
 
     # clear all samples
-    IMUEvents.query.delete()
-    PoseEvents.query.delete()
-    
+    session.query(IMUEvents).delete()
+    session.query(PoseEvents).delete()
+
     # Specify the path to your JSON file
     json_file_path = './GPS_track.json'
 
@@ -100,7 +103,7 @@ def load_samples(limiter=100, session = db.session):
             sensor_label = 'imu' if 'imu' in json_data[timestamp] else 'pose'
             event = json_data[timestamp][sensor_label]
             if sensor_label =='imu':
-                print(timestamp, sensor_label, event['acc_x'])
+                # print(timestamp, sensor_label, event['acc_x'])
 
                 datum = IMUEvents(epoch_time=timestamp, 
                                   p1time_seconds=event['P1time.seconds'], 
@@ -121,7 +124,7 @@ def load_samples(limiter=100, session = db.session):
                 session.add(datum)
                 count_imu += 1
             else:
-                print(timestamp, sensor_label, event['yaw'])
+                # print(timestamp, sensor_label, event['yaw'])
                 datum = PoseEvents(epoch_time=timestamp, 
                     p1time_seconds=event['P1time.seconds'], 
                     p1time_fraction_ns=event['P1time.fraction_ns'],

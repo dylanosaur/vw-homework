@@ -27,7 +27,14 @@ def home():
     columns = IMUEvents.__table__.columns
     # remove table name prefix
     columns = [str(x).split('.')[1] for x in columns]
-    plot_containers = [{'name': column, 'link': f'/plotly?field={column}'} for column in columns]
+    IMU_containers = [{'name': 'IMU.'+column, 'link': f'/plotly?field={column}&table=IMUEvents'} for column in columns]
+
+    columns_pose = PoseEvents.__table__.columns
+    # remove table name prefix
+    columns_pose = [str(x).split('.')[1] for x in columns_pose]
+    pose_containers = [{'name': 'Pose.'+column, 'link': f'/plotly?field={column}&table=PoseEvents'} for column in columns_pose]
+
+    plot_containers = IMU_containers + pose_containers
     return render_template('all_plots.html', plot_containers=plot_containers)
 
 @app.route('/load_samples')
@@ -53,14 +60,19 @@ def sample_table():
 def plotly_generator():
     try:
         field = request.args.get('field')
-        data = [x.filtered_dict(field) for x in IMUEvents.query.all()]
+        table = request.args.get('table')
+        if table == 'IMUEvents':
+            data = [x.filtered_dict(field) for x in IMUEvents.query.all()]
+        else:
+            data = [x.filtered_dict(field) for x in PoseEvents.query.all()]
+
         df = pd.DataFrame(data)
         fig = px.line(df, x='epoch_time', y=field)   
         graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)   
         return render_template('plot.html', graphJSON=graphJSON)
     except Exception as ex:
         print(ex)
-        return f'specify the field like /plotly?field=acc_x from the fields {IMUEvents.__table__.columns}. \n exception: {ex}'
+        return f'specify the field like /plotly?field=acc_x&table=IMUEvents from the fields {IMUEvents.__table__.columns}. \n exception: {ex}'
 
 
 if __name__ == '__main__':
